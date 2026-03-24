@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../antigravity/antigravity_schema.dart';
+
 class AuthService {
   AuthService({FirebaseAuth? auth, FirebaseFirestore? firestore})
       : _auth = auth ?? FirebaseAuth.instance,
@@ -25,11 +27,14 @@ class AuthService {
       password: password,
     );
 
-    await _firestore.collection('users').doc(credential.user!.uid).set({
-      'nome': name,
-      'email': email,
-      'foto': '',
-      'created_at': FieldValue.serverTimestamp(),
+    await _firestore
+        .collection(AntigravitySchema.usersCollection)
+        .doc(credential.user!.uid)
+        .set({
+      AntigravitySchema.userName: name,
+      AntigravitySchema.userEmail: email,
+      AntigravitySchema.userPhoto: '',
+      AntigravitySchema.userCreatedAt: FieldValue.serverTimestamp(),
     });
   }
 

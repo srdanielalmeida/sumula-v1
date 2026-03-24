@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../antigravity/antigravity_schema.dart';
 import '../models/knowledge_item.dart';
 
 class KnowledgeService {
@@ -12,17 +13,17 @@ class KnowledgeService {
   final FirebaseAuth _auth;
 
   CollectionReference<Map<String, dynamic>> get _items =>
-      _firestore.collection('items_conhecimento');
+      _firestore.collection(AntigravitySchema.knowledgeCollection);
   CollectionReference<Map<String, dynamic>> get _connections =>
-      _firestore.collection('conexoes');
+      _firestore.collection(AntigravitySchema.connectionsCollection);
 
   DocumentReference get _currentUserRef =>
-      _firestore.collection('users').doc(_auth.currentUser!.uid);
+      _firestore.collection(AntigravitySchema.usersCollection).doc(_auth.currentUser!.uid);
 
   Stream<List<KnowledgeItem>> watchItemsForCurrentUser() {
     return _items
-        .where('user_id', isEqualTo: _currentUserRef)
-        .orderBy('data_criacao', descending: true)
+        .where(AntigravitySchema.userId, isEqualTo: _currentUserRef)
+        .orderBy(AntigravitySchema.dataCriacao, descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map(KnowledgeItem.fromDoc).toList());
   }
@@ -33,37 +34,27 @@ class KnowledgeService {
   }) async {
     final doc = _items.doc();
 
-    await doc.set({
-      'uid': doc.id,
-      'user_id': _currentUserRef,
-      'tipo': tipo.toLowerCase(),
-      'conteudo_origem': conteudoOrigem,
-      'titulo': 'Processando...',
-      'data_criacao': Timestamp.now(),
-      'status': 'cru',
-      'resumo_ia': '',
-      'tags_geradas': <String>[],
-    });
+    await doc.set(
+      buildKnowledgeSeedPayload(
+        uid: doc.id,
+        userRef: _currentUserRef,
+        tipo: tipo,
+        conteudoOrigem: conteudoOrigem,
+      ),
+    );
 
-    await doc.update({
-      'status': 'destilado',
-      'titulo': 'Insight sobre ${tipo.toUpperCase()} recebido',
-      'resumo_ia':
-          'Resumo MOCK do Crisol: os pontos principais foram extraídos para apoiar criação de conteúdo, reaproveitamento e conexões de ideias.',
-      'tags_geradas': ['insight', 'conteudo', 'sumula_ai'],
-    });
-
+    await doc.update(buildMockCrisolPayload(tipo: tipo));
     return doc;
   }
 
   Future<void> updateTitle({required String itemId, required String title}) async {
-    await _items.doc(itemId).update({'titulo': title});
+    await _items.doc(itemId).update({AntigravitySchema.titulo: title});
   }
 
   Stream<List<KnowledgeItem>> watchRelatedItems({required String excludeItemId}) {
     return _items
-        .where('user_id', isEqualTo: _currentUserRef)
-        .orderBy('data_criacao', descending: true)
+        .where(AntigravitySchema.userId, isEqualTo: _currentUserRef)
+        .orderBy(AntigravitySchema.dataCriacao, descending: true)
         .limit(5)
         .snapshots()
         .map(
@@ -81,11 +72,11 @@ class KnowledgeService {
   }) async {
     final doc = _connections.doc();
     await doc.set({
-      'uid': doc.id,
-      'user_id': _currentUserRef,
-      'item_a_id': _items.doc(itemAId),
-      'item_b_id': _items.doc(itemBId),
-      'tipo_conexao': tipoConexao,
+      AntigravitySchema.uid: doc.id,
+      AntigravitySchema.userId: _currentUserRef,
+      AntigravitySchema.itemAId: _items.doc(itemAId),
+      AntigravitySchema.itemBId: _items.doc(itemBId),
+      AntigravitySchema.tipoConexao: tipoConexao,
     });
   }
 }

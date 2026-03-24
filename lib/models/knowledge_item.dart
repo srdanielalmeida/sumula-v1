@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../antigravity/antigravity_schema.dart';
+
 class KnowledgeItem {
   final String uid;
   final DocumentReference userId;
@@ -26,29 +28,32 @@ class KnowledgeItem {
   factory KnowledgeItem.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
     return KnowledgeItem(
-      uid: data['uid'] as String? ?? doc.id,
-      userId: data['user_id'] as DocumentReference,
-      tipo: data['tipo'] as String? ?? 'texto',
-      conteudoOrigem: data['conteudo_origem'] as String? ?? '',
-      titulo: data['titulo'] as String? ?? 'Sem título',
-      dataCriacao: data['data_criacao'] as Timestamp? ?? Timestamp.now(),
-      status: data['status'] as String? ?? 'cru',
-      resumoIa: data['resumo_ia'] as String? ?? '',
-      tagsGeradas: List<String>.from(data['tags_geradas'] as List? ?? const []),
+      uid: data[AntigravitySchema.uid] as String? ?? doc.id,
+      userId: data[AntigravitySchema.userId] as DocumentReference,
+      tipo: data[AntigravitySchema.tipo] as String? ?? 'texto',
+      conteudoOrigem: data[AntigravitySchema.conteudoOrigem] as String? ?? '',
+      titulo: data[AntigravitySchema.titulo] as String? ?? 'Sem título',
+      dataCriacao:
+          data[AntigravitySchema.dataCriacao] as Timestamp? ?? Timestamp.now(),
+      status: data[AntigravitySchema.status] as String? ?? 'cru',
+      resumoIa: data[AntigravitySchema.resumoIa] as String? ?? '',
+      tagsGeradas: List<String>.from(
+        data[AntigravitySchema.tagsGeradas] as List? ?? const [],
+      ),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
-      'user_id': userId,
-      'tipo': tipo,
-      'conteudo_origem': conteudoOrigem,
-      'titulo': titulo,
-      'data_criacao': dataCriacao,
-      'status': status,
-      'resumo_ia': resumoIa,
-      'tags_geradas': tagsGeradas,
+      AntigravitySchema.uid: uid,
+      AntigravitySchema.userId: userId,
+      AntigravitySchema.tipo: tipo,
+      AntigravitySchema.conteudoOrigem: conteudoOrigem,
+      AntigravitySchema.titulo: titulo,
+      AntigravitySchema.dataCriacao: dataCriacao,
+      AntigravitySchema.status: status,
+      AntigravitySchema.resumoIa: resumoIa,
+      AntigravitySchema.tagsGeradas: tagsGeradas,
     };
   }
 }
